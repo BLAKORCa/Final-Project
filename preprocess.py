@@ -14,7 +14,7 @@ def read_data_image(folder: str):
     Args:
         folder: name of the folder
     Return:
-        numpy array of size (N x H x W). where N is the number of images, H is the height, and W is the width
+        numpy array of size (N x H x W x 3). where N is the number of images, H is the height, and W is the width, 3 is the channels
     
     '''
 
