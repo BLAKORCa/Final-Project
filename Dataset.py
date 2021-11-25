@@ -9,8 +9,7 @@ from preprocess import pool2d
 T = TypeVar('T', np.array, torch.tensor)
 
 
-
-class RetinaDataset(Dataset):
+class BirdDataset(Dataset):
     def __init__(self, imgs_path: str, responds_path: str, is_float: bool) -> None:
         imgs = np.load(imgs_path)
         responds = np.load(responds_path)
