@@ -61,7 +61,7 @@ if __name__ == '__main__':
     # no need to split, we already have train and test set in different folders
 
     # load dataset
-    working_path = 'D:/Projects/bird classification'
+    working_path = os.curdir()
     train_path = working_path + '/train'
     test_path = working_path + '/test'
     valid_path = working_path + '/valid'
