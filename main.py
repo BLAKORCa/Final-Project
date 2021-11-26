@@ -1,16 +1,18 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import sys
+import os,sys
 import argparse
 import gc
+from tqdm import tqdm
 
 from Config import CnnConfig, RnnConfig, TrainConfig
-from Dataset import Dataset
-from preprocess import split_dataset
+# from Dataset import Dataset
+# from preprocess import split_dataset
 from torch.utils.data import DataLoader
-from model.CnnRnn import CnnRnn
-from model.Rnn import Rnn
+from torchvision.datasets import ImageFolder
+from torchvision import transforms
+from model import cnn
 import matplotlib.pyplot as plt
 
 
@@ -33,7 +35,7 @@ def test(model, device, test_loader):
             pre_target = pre_target.to(device)
             # output, _ = model(data, pre_target)
             output, _ = model(pre_target)
-            test_loss += nn.MSELoss()(output, target).item()  # sum up batch loss
+            test_loss += nn.CrossEntropyLoss()(output, target).item()  # sum up batch loss
             plot_to_png(output, target, True)
     test_loss /= len(test_loader.dataset)
     print('TEST loss is ', test_loss)
@@ -45,58 +47,61 @@ if __name__ == '__main__':
     torch.cuda.manual_seed(0)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--float', type=bool, default=True)
+    # parser.add_argument('--float', type=bool, default=True)
     parser.add_argument('--log_file', type=bool, default=True)
     args = parser.parse_args()
-
+    
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    if args.log_file:
-        sys.stdout = open('./log/out.txt', 'w')
-        sys.stderr = open('./log/err.txt', 'w')
 
-    train_x, train_y, test_x, test_y = split_dataset(
-        imgs_path="",
-        responds_path="",
-        n_splits=5,
-        test_fold=0
-    )
+    # args.log_file = True
+    # if args.log_file:
+    #     sys.stdout = open('./log/out.txt', 'w')
+    #     sys.stderr = open('./log/err.txt', 'w')
+    print("yes")
+    # no need to split, we already have train and test set in different folders
 
-    print('tx, ty: ', train_x.shape, train_y.shape, test_x.shape, test_y.shape)
-    train_x 
-    # (N, time_step, channel, height, width)
-    train_y 
-    # (N, time_step, label)
-    test_x 
-    test_y 
+    # load dataset
+    working_path = 'D:/Projects/bird classification'
+    train_path = working_path + '/train'
+    test_path = working_path + '/test'
+    valid_path = working_path + '/valid'
+    labels = os.listdir(train_path)
+    
+    # can change transform here
+    train_transform=transforms.Compose([
+            transforms.RandomRotation(10),      # rotate +/- 10 degrees
+            transforms.RandomHorizontalFlip(),  # reverse 50% of images
+            transforms.Resize(25),             # resize shortest side to 50 pixels
+            transforms.CenterCrop(25),         # crop longest side to 50 pixels at center
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406],
+                                [0.229, 0.224, 0.225])
+    ])
 
-    # train_x = np.random.rand(1, 1, 1, 500, 500)
-    # train_y = np.random.rand(1, 1, 1)
-    # test_x = np.random.rand(1, 1, 1, 500, 500)
-    # test_x = torch.tensor(test_x)
-    # test_y = np.random.rand(1, 1, 1)
-    # test_y = torch.tensor(test_y)
+    trainset = ImageFolder(train_path, transform = train_transform)
+    testset = ImageFolder(test_path, transform = train_transform)
+    validset = ImageFolder(valid_path, transform = train_transform)
 
-    print('train_x: ', train_x.shape, 'train_y: ', train_y.shape)
-    train_data = Dataset(imgs=train_x, responds=train_y,
-                               is_float=True, pooling=2)
-    train_loader = DataLoader(dataset=train_data, batch_size=16, shuffle=False, num_workers=1)
-    del train_x, train_y
-    gc.collect()
-    test_data = Dataset(imgs=test_x, responds=test_y,
-                              is_float=True, pooling=2)
-    test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=False, num_workers=1)
-    del test_x, test_y
-    gc.collect()
+    # load dataset into batches
+    batch_size = 64
+    train_loader = DataLoader(trainset, batch_size, shuffle = True, num_workers=2, pin_memory=True)
+    val_loader = DataLoader(validset, batch_size, num_workers=2, pin_memory=True)
+    test_loader = DataLoader(testset, batch_size, num_workers=2, pin_memory=True)
 
-    rnn_cg = RnnConfig(embed_in=5, embed_out=5, hidden_size=8, num_layers=1, batch_first=True)
-    cnn1_cg = CnnConfig(in_channels=1, out_channels=8, kernel_size=(10, 10, 10),
-                        stride=2, padding=0, pooling=(2, 8, 8))
-    cnn2_cg = CnnConfig(in_channels=8, out_channels=16, kernel_size=(10, 10, 10),
-                        stride=2, padding=0, pooling=(2, 8, 8))
+    # we can modify this part later, after finishing training the baseline model
+    # rnn_cg = RnnConfig(embed_in=5, embed_out=5, hidden_size=8, num_layers=1, batch_first=True)
+    # cnn1_cg = CnnConfig(in_channels=1, out_channels=8, kernel_size=(10, 10, 10),
+    #                     stride=2, padding=0, pooling=(2, 8, 8))
+    # cnn2_cg = CnnConfig(in_channels=8, out_channels=16, kernel_size=(10, 10, 10),
+    #                     stride=2, padding=0, pooling=(2, 8, 8))
+
     # model = CnnRnn(cnn1_cg, cnn2_cg, rnn_cg).float().to(device)
-    model = CnnRnn(rnn_cg).float().to(device)
+    # model = CnnRnn(rnn_cg).float().to(device)
 
-    train_cg = TrainConfig(EPOCH=101, LR=0.01, loss_function=nn.MSELoss,
+    model = cnn().float().to(device)
+    
+    # we use crossEntrophy loss here, because we are doing multi class classfication
+    train_cg = TrainConfig(EPOCH=101, LR=0.01, loss_function=nn.CrossEntropyLoss,
                            optimizer=torch.optim.Adam)
     EPOCH = train_cg.EPOCH
     optimizer = train_cg.optimizer(model.parameters(), lr=train_cg.LR)
@@ -107,38 +112,44 @@ if __name__ == '__main__':
     train_record = []
     test_record = []
 
-    print('dataset pool:', train_data.pooling, 'batch', train_loader.batch_size)
-    print('reg_lambda ', reg_lambda)
-    print('cnn1, cnn2, rnn', cnn1_cg.__dict__, cnn2_cg.__dict__, rnn_cg.__dict__)
+    # later deal with this part
+    # print('dataset pool:', train_data.pooling, 'batch', train_loader.batch_size)
+    # print('reg_lambda ', reg_lambda)
+    # print('cnn1, cnn2, rnn', cnn1_cg.__dict__, cnn2_cg.__dict__, rnn_cg.__dict__)
 
     for epoch in range(EPOCH):
         print('epoch: ', epoch)
-        for step, (b_x, b_y, b_pre_y) in enumerate(train_loader):
-            # print(b_x.shape, 'bx', b_y.shape, 'by')
-            b_x = b_x.to(device)
-            b_y = b_y.to(device)
-            # b_pre_y = b_pre_y.to(device)
+        batch_count = 0
+        for batch in tqdm(train_loader):
+            images, labels = batch
+            logits = model(images)
 
-            # output, _ = model(b_x, b_pre_y)
-            output, _ = model(b_x, None)
-            loss = loss_func(output, b_y)
+            images = images.to(device)
+            labels = labels.to(device)
+
+            output = model(images)
+            loss = loss_func(output, labels)
             reg = torch.tensor(0.).to(device)
 
-            if epoch % (EPOCH // 10) == 0 and step == 0:
-                plot_to_png(output, b_y, False)
-            if step == 0:
-                print('training loss is ', loss)
+            # if epoch % (EPOCH // 10) == 0 and step == 0:
+            #     plot_to_png(output, b_y, False)
+            batch_count+=1
+            if batch_count % 50 == 0:
+                print('training loss is ', loss.item())
                 train_record += [loss.item()]
+
+            y_pred = torch.max(logits,1)[1]
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             torch.cuda.empty_cache()
 
-        if epoch % (EPOCH // 20) == 0:
-            test_loss = test(model, device, test_loader)
-            test_record += [test_loss]
-            model.train()
-            torch.cuda.empty_cache()
+        # if epoch % (EPOCH // 20) == 0:
+        #     test_loss = test(model, device, test_loader)
+        #     test_record += [test_loss]
+        #     model.train()
+        #     torch.cuda.empty_cache()
 
     torch.save(model, './model/cnnrnn.pkl')
     np.save('./log/train_record.npy', np.array(train_record)[1:])

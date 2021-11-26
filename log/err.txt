@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "main.py", line 107, in <module>
+    loss_func = train_cg.loss_function()
+  File "C:\ProgramData\Anaconda3\lib\site-packages\torch\nn\modules\module.py", line 547, in __call__
+    result = self.forward(*input, **kwargs)
+TypeError: forward() missing 2 required positional arguments: 'input' and 'target'
