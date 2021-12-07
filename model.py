@@ -28,8 +28,23 @@ class cnn(nn.Module):
             nn.Dropout(0.25),
             nn.Linear(128,64),
             nn.Dropout(0.25),
-            nn.Linear(64,315)
+            nn.Linear(64,100)
         )
 
     def forward(self,x):
         return self.feature(x)
+    
+class MoblieNet(nn.Module):
+    def __init__(self, num_cls):
+        super().__init__()
+        self.MN = torch.hub.load('pytorch/vision:v0.10.0', 'mobilenet_v2', pretrained=True)
+        self.linear = nn.Linear(1000, num_cls)
+        self.drop = nn.Dropout(0.2)
+        self.softmax = nn.Softmax(dim=-1)
+    def forward(self, x):
+        x = self.MN(x)
+        x = self.linear(x)
+        x = self.drop(x)
+        x = self.softmax(x)
+        return x
+        

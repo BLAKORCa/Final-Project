@@ -12,7 +12,7 @@ from preprocess import one_hot
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
-from model import cnn
+from model import cnn, MoblieNet
 import matplotlib.pyplot as plt
 
 
@@ -101,10 +101,12 @@ if __name__ == '__main__':
     # model = CnnRnn(cnn1_cg, cnn2_cg, rnn_cg).float().to(device)
     # model = CnnRnn(rnn_cg).float().to(device)
 
-    model = cnn().float().to(device)
+    #======================================================================================================
+    # model = cnn().float().to(device)
+    model = MoblieNet(num_cls=100).float().to(device)
     
     # we use crossEntrophy loss here, because we are doing multi class classfication
-    train_cg = TrainConfig(EPOCH=101, LR=0.01, loss_function=nn.CrossEntropyLoss,
+    train_cg = TrainConfig(EPOCH=101, LR=0.001, loss_function=nn.CrossEntropyLoss,
                            optimizer=torch.optim.Adam)
     EPOCH = train_cg.EPOCH
     optimizer = train_cg.optimizer(model.parameters(), lr=train_cg.LR)
@@ -120,10 +122,9 @@ if __name__ == '__main__':
     # print('reg_lambda ', reg_lambda)
     # print('cnn1, cnn2, rnn', cnn1_cg.__dict__, cnn2_cg.__dict__, rnn_cg.__dict__)
 
-    for epoch in range(EPOCH):
+    for epoch in tqdm(range(EPOCH)):
         print('epoch: ', epoch)
-        batch_count = 0
-        for batch in tqdm(train_loader):
+        for i, batch in enumerate(train_loader):
             images, labels = batch
             labels = one_hot(labels, num_cls=100)
 
@@ -136,12 +137,9 @@ if __name__ == '__main__':
 
             # if epoch % (EPOCH // 10) == 0 and step == 0:
             #     plot_to_png(output, b_y, False)
-            batch_count+=1
-            if batch_count % 50 == 0:
+            if i % 10 == 0:
                 print('training loss is ', loss.item())
                 train_record += [loss.item()]
-
-            y_pred = torch.max(logits,1)[1]
 
             optimizer.zero_grad()
             loss.backward()
