@@ -1,38 +1,17 @@
-
+import torch
 import cv2
 import numpy as np
 from sklearn.decomposition import PCA
 
+from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
+from torchvision import transforms
 
 
-def get_dict():
-    '''
-    from 'class_dict.csv', return a dictory that key is the name of the bird class and the value is the index number.
-    '''
-    pass
-
-
-def read_data_image(folder: str):
-    '''
-    read image data in folder as numpy array. Return the numpy array 
-    Args:
-        folder: name of the folder
-    Return:
-        numpy array of size (N x H x W x 3). where N is the number of images, H is the height, and W is the width, 3 is the channels
-    
-    '''
-
-
-def save_data_label(folder: str):
-    '''
-    get the one-hot label of the folder as numpy array. Return the numpy array 
-    Args:
-        folder: name of the folder
-    Return:
-        numpy array of size (N x C). where N is the number of images, C is the number of class
-    
-    '''
+def one_hot(labels, num_cls):
+    oneHots = torch.zeros((len(labels), num_cls))
+    oneHots[range(len(oneHots)), labels] = 1
+    return oneHots
 
 def pca_image(imgs: np.array, k):
     N, h, w, c = imgs.shape
@@ -53,13 +32,21 @@ def find_opt_pca(imgs, max_n_comp, step):
     return np.argmax(dif) * step
 
 if __name__ == '__main__':
-    img = cv2.imread('1.jpg')
-    # imgs = ImageFolder('./data')
-    # for img, label in imgs:
-    #     print(type(img), label)
+    # img = cv2.imread('1.jpg')
 
+    transform = transforms.Compose([
+        transforms.ToTensor()
+    ])
+    imgs = ImageFolder('./data/test/', transform=transform)
+    print(imgs[0][0], imgs[0][1])
+    train_loader = DataLoader(imgs, 2, shuffle = False, num_workers=1)
+    print(DataLoader)
+    for imgs, labels in train_loader:
+        labels = one_hot(labels, num_cls=100)
+        print(imgs.shape, labels)
+    
     # imgs = np.array([img for i in range(150)])
-    imgs = np.random.randn(250, 224, 224, 3)
+    # imgs = np.random.randn(250, 224, 224, 3)
     # cv2.imshow('m', img)
     # cv2.waitKey(0)
 
@@ -68,8 +55,8 @@ if __name__ == '__main__':
     # cv2.imshow('m1',res[0])
     # cv2.waitKey(0)
 
-    k = find_opt_pca(imgs, 224, 20)
-    print(k)
+    # k = find_opt_pca(imgs, 224, 20)
+    # print(k)
 
 
 

@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from Config import CnnConfig, RnnConfig, TrainConfig
 # from Dataset import Dataset
-# from preprocess import split_dataset
+from preprocess import one_hot
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
@@ -60,11 +60,14 @@ if __name__ == '__main__':
     print("yes")
     # no need to split, we already have train and test set in different folders
 
-    # load dataset
-    working_path = os.curdir()
-    train_path = working_path + '/train'
-    test_path = working_path + '/test'
-    valid_path = working_path + '/valid'
+    # load dataset  
+    print(os.getcwd())
+    working_path = os.getcwd()
+  
+
+    train_path = working_path + '/data/train'
+    test_path = working_path + '/data/test'
+    valid_path = working_path + '/data/valid'
     labels = os.listdir(train_path)
     
     # can change transform here
@@ -122,7 +125,7 @@ if __name__ == '__main__':
         batch_count = 0
         for batch in tqdm(train_loader):
             images, labels = batch
-            logits = model(images)
+            labels = one_hot(labels, num_cls=100)
 
             images = images.to(device)
             labels = labels.to(device)
