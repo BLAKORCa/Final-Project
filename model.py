@@ -103,7 +103,7 @@ class SpinalNet_VGG(nn.Module):
     def __init__(self):
         super(SpinalNet_VGG, self).__init__()
 
-        model_ft = models.wide_resnet101_2(pretrained=True)
+        model_ft = models.vgg16(pretrained=True)
         num_ftrs = model_ft.fc.in_features
         half_in_size = round(num_ftrs/2)
         layer_width = 540
