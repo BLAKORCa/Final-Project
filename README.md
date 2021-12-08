@@ -10,3 +10,17 @@ We have processed and structured PCA which is used to reduce dimensions for orig
 We have built basic CNN model for test data set.
 3. training codes
 Parameter tuning codes need to be debugged.
+## 1.2 Expect to accomplish
+1. a complete model pipeline
+Done for running current model and possibly reproducible for other defined models.
+2. reasonable classification accuracy
+Working on parameter tuning codes for model.
+3. start in unsupervised task
+Working on structure design.
+## 1.3 Would like to accomplish
+1. analysis of different models
+Working on literature review about different models.
+2. reasonable unsupervised-task accuracy
+Working on structure design.
+3. fine tuning for each model we constructed
+Current parameter tuning codes need to be debugged, and further structure for other models need to be designed.
