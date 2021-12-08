@@ -55,7 +55,7 @@ if __name__ == '__main__':
     # parser.add_argument('--float', type=bool, default=True)
     parser.add_argument('--log_file', type=bool, default=True)
     args = parser.parse_args()
-    
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # args.log_file = True
@@ -65,25 +65,25 @@ if __name__ == '__main__':
     print("yes")
     # no need to split, we already have train and test set in different folders
 
-    # load dataset  
+    # load dataset
     print(os.getcwd())
     working_path = os.getcwd()
-  
+
 
     train_path = working_path + '/data/train'
     test_path = working_path + '/data/test'
     valid_path = working_path + '/data/valid'
     labels = os.listdir(train_path)
-    
+
     # can change transform here
     train_transform=transforms.Compose([
             transforms.RandomRotation(10),      # rotate +/- 10 degrees
             transforms.RandomHorizontalFlip(),  # reverse 50% of images
-            transforms.Resize(25),             # resize shortest side to 50 pixels
-            transforms.CenterCrop(25),         # crop longest side to 50 pixels at center
+            transforms.Resize(224),             # resize shortest side to 50 pixels
+            # transforms.CenterCrop(25),         # crop longest side to 50 pixels at center
             transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406],
-                                [0.229, 0.224, 0.225])
+            # transforms.Normalize([0.485, 0.456, 0.406],
+            #                     [0.229, 0.224, 0.225])
     ])
 
     trainset = ImageFolder(train_path, transform = train_transform)
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     #======================================================================================================
     # model = cnn().float().to(device)
     model = MobileNetv2(output_size=100).to(device)
-    
+
     # we use crossEntrophy loss here, because we are doing multi class classfication
     train_cg = TrainConfig(EPOCH=2001, LR=0.001, loss_function=nn.CrossEntropyLoss,
                            optimizer=torch.optim.Adam)
@@ -153,7 +153,7 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
             torch.cuda.empty_cache()
-        
+
         # if epoch % (EPOCH // 20) == 0:
         #     test_loss = test(model, device, test_loader)
         #     test_record += [test_loss]
