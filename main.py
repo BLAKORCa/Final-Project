@@ -4,16 +4,21 @@ import numpy as np
 import os,sys
 import argparse
 import gc
+import torchvision
 from tqdm import tqdm
-
 from Config import CnnConfig, RnnConfig, TrainConfig
 # from Dataset import Dataset
 from preprocess import one_hot
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
-from model import cnn, MoblieNet
+
+from model import cnn, MobileNetv2
+
 import matplotlib.pyplot as plt
+
+
+
 
 
 def plot_to_png(output, target, isTest):
@@ -86,7 +91,7 @@ if __name__ == '__main__':
     validset = ImageFolder(valid_path, transform = train_transform)
 
     # load dataset into batches
-    batch_size = 64
+    batch_size = 2048
     train_loader = DataLoader(trainset, batch_size, shuffle = True, num_workers=2, pin_memory=True)
     val_loader = DataLoader(validset, batch_size, num_workers=2, pin_memory=True)
     test_loader = DataLoader(testset, batch_size, num_workers=2, pin_memory=True)
@@ -103,10 +108,10 @@ if __name__ == '__main__':
 
     #======================================================================================================
     # model = cnn().float().to(device)
-    model = MoblieNet(num_cls=100).float().to(device)
+    model = MobileNetv2(output_size=100).to(device)
     
     # we use crossEntrophy loss here, because we are doing multi class classfication
-    train_cg = TrainConfig(EPOCH=101, LR=0.001, loss_function=nn.CrossEntropyLoss,
+    train_cg = TrainConfig(EPOCH=2001, LR=0.001, loss_function=nn.CrossEntropyLoss,
                            optimizer=torch.optim.Adam)
     EPOCH = train_cg.EPOCH
     optimizer = train_cg.optimizer(model.parameters(), lr=train_cg.LR)
@@ -140,12 +145,15 @@ if __name__ == '__main__':
             if i % 10 == 0:
                 print('training loss is ', loss.item())
                 train_record += [loss.item()]
+                y_pred = output.argmax(axis=1).cpu()
+                y_label = labels.argmax(axis=1).cpu()
+                print('accracy is: ', np.mean(y_pred.numpy() == y_label.numpy()))
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             torch.cuda.empty_cache()
-
+        
         # if epoch % (EPOCH // 20) == 0:
         #     test_loss = test(model, device, test_loader)
         #     test_record += [test_loss]

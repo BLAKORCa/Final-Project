@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torchvision.models import mobilenet_v2
 
 class cnn(nn.Module):
     def __init__(self):
@@ -33,18 +34,22 @@ class cnn(nn.Module):
 
     def forward(self,x):
         return self.feature(x)
-    
-class MoblieNet(nn.Module):
-    def __init__(self, num_cls):
-        super().__init__()
-        self.MN = torch.hub.load('pytorch/vision:v0.10.0', 'mobilenet_v2', pretrained=True)
-        self.linear = nn.Linear(1000, num_cls)
-        self.drop = nn.Dropout(0.2)
-        self.softmax = nn.Softmax(dim=-1)
-    def forward(self, x):
-        x = self.MN(x)
-        x = self.linear(x)
-        x = self.drop(x)
-        x = self.softmax(x)
-        return x
-        
+
+
+class MobileNetv2(nn.Module):
+  def __init__(self, output_size):
+    super().__init__()
+    self.mnet = mobilenet_v2(pretrained=True)
+    self.freeze()
+
+    self.mnet.classifier = nn.Sequential(
+        nn.Linear(1280, output_size),
+        nn.LogSoftmax(1)
+    )
+
+  def forward(self, x):
+    return self.mnet(x)
+  
+
+
+
