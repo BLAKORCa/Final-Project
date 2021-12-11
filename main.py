@@ -14,6 +14,8 @@ from torchvision.datasets import ImageFolder
 from torchvision import transforms
 
 from model import cnn, MobileNetv2
+from visualization.vis_utils import plot
+from preprocess import pca_image, find_opt_pca
 
 import matplotlib.pyplot as plt
 
@@ -52,7 +54,7 @@ def test(model, device, test_loader):
 
 
 
-def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
+def main( LR: float, EPOCH: int, OPTIMIZER, MODEL, FE):
     
     torch.manual_seed(0)
     torch.cuda.manual_seed(0)
