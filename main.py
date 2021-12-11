@@ -154,11 +154,11 @@ if __name__ == '__main__':
             optimizer.step()
             torch.cuda.empty_cache()
 
-        # if epoch % (EPOCH // 20) == 0:
-        #     test_loss = test(model, device, test_loader)
-        #     test_record += [test_loss]
-        #     model.train()
-        #     torch.cuda.empty_cache()
+        if epoch % (EPOCH // 20) == 0:
+            test_loss = test(model, device, test_loader)
+            test_record += [test_loss]
+            model.train()
+            torch.cuda.empty_cache()
 
     torch.save(model, './model/cnnrnn.pkl')
     np.save('./log/train_record.npy', np.array(train_record)[1:])

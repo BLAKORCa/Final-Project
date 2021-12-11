@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torchvision import models 
 from torchvision.models import mobilenet_v2
 
 class cnn(nn.Module):
@@ -51,33 +52,34 @@ class MobileNetv2(nn.Module):
     return self.mnet(x)
 
 class SpinalNet_ResNet(nn.Module):
+    
     def __init__(self):
         super(SpinalNet_ResNet, self).__init__()
-
+        
         model_ft = models.wide_resnet101_2(pretrained=True)
         num_ftrs = model_ft.fc.in_features
-        half_in_size = round(num_ftrs/2)
+        self.half_in_size = round(num_ftrs / 2)
         layer_width = 540
-        Num_class=100
-
+        Num_class = 100
+        
         self.fc_spinal_layer1 = nn.Sequential(
             #nn.Dropout(p = 0.5),
-            nn.Linear(half_in_size, layer_width),
+            nn.Linear(self.half_in_size, layer_width),
             #nn.BatchNorm1d(layer_width),
             nn.ReLU(inplace=True),)
         self.fc_spinal_layer2 = nn.Sequential(
             #nn.Dropout(p = 0.5),
-            nn.Linear(half_in_size+layer_width, layer_width),
+            nn.Linear(self.half_in_size+layer_width, layer_width),
             #nn.BatchNorm1d(layer_width),
             nn.ReLU(inplace=True),)
         self.fc_spinal_layer3 = nn.Sequential(
             #nn.Dropout(p = 0.5),
-            nn.Linear(half_in_size+layer_width, layer_width),
+            nn.Linear(self.half_in_size+layer_width, layer_width),
             #nn.BatchNorm1d(layer_width),
             nn.ReLU(inplace=True),)
         self.fc_spinal_layer4 = nn.Sequential(
             #nn.Dropout(p = 0.5),
-            nn.Linear(half_in_size+layer_width, layer_width),
+            nn.Linear(self.half_in_size+layer_width, layer_width),
             #nn.BatchNorm1d(layer_width),
             nn.ReLU(inplace=True),)
         self.fc_out = nn.Sequential(
@@ -85,10 +87,10 @@ class SpinalNet_ResNet(nn.Module):
             nn.Linear(layer_width*4, Num_class),)
 
     def forward(self, x):
-        x1 = self.fc_spinal_layer1(x[:, 0:half_in_size])
-        x2 = self.fc_spinal_layer2(torch.cat([ x[:,half_in_size:2*half_in_size], x1], dim=1))
-        x3 = self.fc_spinal_layer3(torch.cat([ x[:,0:half_in_size], x2], dim=1))
-        x4 = self.fc_spinal_layer4(torch.cat([ x[:,half_in_size:2*half_in_size], x3], dim=1))
+        x1 = self.fc_spinal_layer1(x[:, 0:self.half_in_size])
+        x2 = self.fc_spinal_layer2(torch.cat([ x[:,self.half_in_size:2*self.half_in_size], x1], dim=1))
+        x3 = self.fc_spinal_layer3(torch.cat([ x[:,0:self.half_in_size], x2], dim=1))
+        x4 = self.fc_spinal_layer4(torch.cat([ x[:,self.half_in_size:2*self.half_in_size], x3], dim=1))
 
 
         x = torch.cat([x1, x2], dim=1)
@@ -105,26 +107,26 @@ class SpinalNet_VGG(nn.Module):
 
         model_ft = models.vgg16(pretrained=True)
         num_ftrs = model_ft.fc.in_features
-        half_in_size = round(num_ftrs/2)
+        self.half_in_size = round(num_ftrs/2)
         layer_width = 540
         Num_class=100
 
         self.fc_spinal_layer1 = nn.Sequential(
-            nn.Dropout(p = 0.5), nn.Linear(half_in_size, layer_width),
+            nn.Dropout(p = 0.5), nn.Linear(self.half_in_size, layer_width),
             nn.BatchNorm1d(layer_width), nn.ReLU(inplace=True),)
         self.fc_spinal_layer2 = nn.Sequential(
             nn.Dropout(p = 0.5),
-            nn.Linear(half_in_size+layer_width, layer_width),
+            nn.Linear(self.half_in_size+layer_width, layer_width),
             nn.BatchNorm1d(layer_width),
             nn.ReLU(inplace=True),)
         self.fc_spinal_layer3 = nn.Sequential(
             nn.Dropout(p = 0.5),
-            nn.Linear(half_in_size+layer_width, layer_width),
+            nn.Linear(self.half_in_size+layer_width, layer_width),
             nn.BatchNorm1d(layer_width),
             nn.ReLU(inplace=True),)
         self.fc_spinal_layer4 = nn.Sequential(
             nn.Dropout(p = 0.5),
-            nn.Linear(half_in_size+layer_width, layer_width),
+            nn.Linear(self.half_in_size+layer_width, layer_width),
             nn.BatchNorm1d(layer_width),
             nn.ReLU(inplace=True),)
         self.fc_out = nn.Sequential(
@@ -132,10 +134,10 @@ class SpinalNet_VGG(nn.Module):
             nn.Linear(layer_width*4, Num_class),)
 
     def forward(self, x):
-        x1 = self.fc_spinal_layer1(x[:, 0:half_in_size])
-        x2 = self.fc_spinal_layer2(torch.cat([ x[:,half_in_size:2*half_in_size], x1], dim=1))
-        x3 = self.fc_spinal_layer3(torch.cat([ x[:,0:half_in_size], x2], dim=1))
-        x4 = self.fc_spinal_layer4(torch.cat([ x[:,half_in_size:2*half_in_size], x3], dim=1))
+        x1 = self.fc_spinal_layer1(x[:, 0:self.half_in_size])
+        x2 = self.fc_spinal_layer2(torch.cat([ x[:,self.half_in_size:2*self.half_in_size], x1], dim=1))
+        x3 = self.fc_spinal_layer3(torch.cat([ x[:,0:self.half_in_size], x2], dim=1))
+        x4 = self.fc_spinal_layer4(torch.cat([ x[:,self.half_in_size:2*self.half_in_size], x3], dim=1))
 
 
         x = torch.cat([x1, x2], dim=1)
