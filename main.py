@@ -47,7 +47,13 @@ def test(model, device, test_loader):
     return test_loss
 
 
-if __name__ == '__main__':
+
+
+
+
+
+def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
+    
     torch.manual_seed(0)
     torch.cuda.manual_seed(0)
 
@@ -111,8 +117,8 @@ if __name__ == '__main__':
     model = MobileNetv2(output_size=100).to(device)
 
     # we use crossEntrophy loss here, because we are doing multi class classfication
-    train_cg = TrainConfig(EPOCH=2001, LR=0.001, loss_function=nn.CrossEntropyLoss,
-                           optimizer=torch.optim.Adam)
+    train_cg = TrainConfig(EPOCH=EPOCH, LR=LR, loss_function=nn.CrossEntropyLoss,
+                           optimizer=OPTIMIZER)
     EPOCH = train_cg.EPOCH
     optimizer = train_cg.optimizer(model.parameters(), lr=train_cg.LR)
     loss_func = train_cg.loss_function()
@@ -155,11 +161,24 @@ if __name__ == '__main__':
             torch.cuda.empty_cache()
 
         if epoch % (EPOCH // 20) == 0:
+
+            
+            hypara_record
+
             test_loss = test(model, device, test_loader)
             test_record += [test_loss]
             model.train()
             torch.cuda.empty_cache()
 
+
     torch.save(model, './model/cnnrnn.pkl')
     np.save('./log/train_record.npy', np.array(train_record)[1:])
     np.save('./log/test_record.npy', np.array(test_record)[1:])
+
+
+#####Implementation ###############
+if __name__ == '__main__':
+    
+
+    
+
