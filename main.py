@@ -190,8 +190,6 @@ if __name__ == '__main__':
         
         for  i in LR:
             MODEL_performance +=  [ main(MODEL=MODEL_list[ind], LR= i, EPOCH=100, OPTIMIZER=torch.optim.Adam) ]
-            MODEL_performance = [np.logspace(13,1415,10),np.zeros(5),np.zeros(14)]
-            print( os.path.join('./log/LR/', Modelname[ind], 'acc_record_' + str(i) + '.npy') )
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'acc_record_'+ str(i) +'.npy'), np.array(MODEL_performance[0])[1:])
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'train_record_'+ str(i) +'.npy'), np.array(MODEL_performance[1])[1:])
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'test_record_'+ str(i) +'.npy'), np.array(MODEL_performance[2])[1:])

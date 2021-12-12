@@ -28,7 +28,8 @@ class cnn(nn.Module):
             nn.Flatten(),
             nn.Linear(400,128),
             nn.Dropout(0.25),
-            nn.Linear(128,100)
+            nn.Linear(128,100),
+            nn.LogSoftmax(1)
         )
 
     def forward(self,x):
