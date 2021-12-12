@@ -7,7 +7,6 @@ import gc
 import torchvision
 from tqdm import tqdm
 from Config import CnnConfig, RnnConfig, TrainConfig
-# from Dataset import Dataset
 from preprocess import one_hot
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
@@ -42,10 +41,6 @@ def test(model, device, test_loader):
     test_loss /= len(test_loader.dataset)
     print('TEST loss is ', test_loss)
     return test_loss
-
-
-
-
 
 
 
@@ -93,7 +88,7 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
     validset = ImageFolder(valid_path, transform = train_transform)
 
     # load dataset into batches
-    batch_size = 2048
+    batch_size = 64
     train_loader = DataLoader(trainset, batch_size, shuffle = True, num_workers=2, pin_memory=True)
     val_loader = DataLoader(validset, batch_size, num_workers=2, pin_memory=True)
     test_loader = DataLoader(testset, batch_size, num_workers=2, pin_memory=True)
@@ -118,7 +113,6 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
     EPOCH = train_cg.EPOCH
     optimizer = train_cg.optimizer(model.parameters(), lr=train_cg.LR)
     loss_func = train_cg.loss_function()
-    reg_lambda = 0.0
 
     print('start train, device is ', device)
     train_record = []
@@ -173,39 +167,41 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
 
 #####Implementation ###############
 if __name__ == '__main__':
-    MODEL_performance = []
-    MODEL_list = [cnn, MobileNetv2, SpinalNet_ResNet, Vgg16]
-    Modelname = ['cnn', 'MobileNetv2', 'SpinalNet_ResNet', 'Vgg16']
+    MODEL_performance = ()
+    MODEL_list = [cnn,MobileNetv2, SpinalNet_ResNet, Vgg16]
+    Modelname = ['cnn','MobileNetv2', 'SpinalNet_ResNet', 'Vgg16']
     optimizer_name = ['Adam','SGD']
     LR = [0.0001, 0.001, 0.01, 0.1]
     optimizer = [torch.optim.Adam, torch.optim.SGD]
 
     for ind in range(len(MODEL_list)):
+        mod = MODEL_list[ind]
+
         if not os.path.exists('./log/LR/'):
             os.mkdir('./log/LR/')
-            os.mkdir('./log/OPT/')
+
         if not os.path.exists(os.path.join('./log/LR/', Modelname[ind])):
             os.mkdir(os.path.join('./log/LR/', Modelname[ind]))
         
-        
         for  i in LR:
-            MODEL_performance +=  [ main(MODEL=MODEL_list[ind], LR= i, EPOCH=100, OPTIMIZER=torch.optim.Adam) ]
+            MODEL_performance = main(MODEL=mod, LR= i, EPOCH=100, OPTIMIZER=torch.optim.Adam)
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'acc_record_'+ str(i) +'.npy'), np.array(MODEL_performance[0])[1:])
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'train_record_'+ str(i) +'.npy'), np.array(MODEL_performance[1])[1:])
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'test_record_'+ str(i) +'.npy'), np.array(MODEL_performance[2])[1:])
-            MODEL_performance =[]
+            MODEL_performance = ()
+
+        if not os.path.exists('./log/OPT/'):
+            os.mkdir('./log/OPT/')
 
         if not os.path.exists(os.path.join('./log/OPT/', Modelname[ind])):
             os.mkdir(os.path.join('./log/OPT/', Modelname[ind]))
         
-
-    
         for  j in range(len(optimizer_name)):
-            MODEL_performance +=  [ main(MODEL=MODEL_list[ind], LR= 0.001, EPOCH=100, OPTIMIZER=optimizer[j](MODEL_list[ind].parameters())) ]
+            MODEL_performance = main(MODEL=mod, LR= 0.001, EPOCH=100, OPTIMIZER=optimizer[j])
             np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'acc_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[0])[1:])
             np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'train_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[1])[1:])
             np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'test_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[2])[1:])
-            MODEL_performance =[]
+            MODEL_performance =()
 
         
 
