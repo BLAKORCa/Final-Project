@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
 
-from model import cnn, MobileNetv2,SpinalNet_ResNet,SpinalNet_VGG
+from model import cnn, MobileNetv2,SpinalNet_ResNet, Vgg16
 
 import matplotlib.pyplot as plt
 
@@ -174,8 +174,8 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
 #####Implementation ###############
 if __name__ == '__main__':
     MODEL_performance = []
-    MODEL_list = [cnn, MobileNetv2, SpinalNet_ResNet, SpinalNet_VGG]
-    Modelname = ['cnn', 'MobileNetv2', 'SpinalNet_ResNet', 'SpinalNet_VGG']
+    MODEL_list = [cnn, MobileNetv2, SpinalNet_ResNet, Vgg16]
+    Modelname = ['cnn', 'MobileNetv2', 'SpinalNet_ResNet', 'Vgg16']
     optimizer_name = ['Adam','SGD']
     LR = [0.0001, 0.001, 0.01, 0.1]
     optimizer = [torch.optim.Adam, torch.optim.SGD]
