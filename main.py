@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
 
-from model import cnn, MobileNetv2
+from model import cnn, MobileNetv2,SpinalNet_ResNet,SpinalNet_VGG
 
 import matplotlib.pyplot as plt
 
@@ -35,13 +35,10 @@ def test(model, device, test_loader):
     model.eval()
     test_loss = 0
     with torch.no_grad():
-        for data, target, pre_target in test_loader:
+        for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            pre_target = pre_target.to(device)
-            # output, _ = model(data, pre_target)
-            output, _ = model(pre_target)
+            output= model(data)
             test_loss += nn.CrossEntropyLoss()(output, target).item()  # sum up batch loss
-            plot_to_png(output, target, True)
     test_loss /= len(test_loader.dataset)
     print('TEST loss is ', test_loss)
     return test_loss
@@ -63,7 +60,6 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
     # args.log_file = True
     # if args.log_file:
     #     sys.stdout = open('./log/out.txt', 'w')
@@ -88,8 +84,8 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
             transforms.Resize(224),             # resize shortest side to 50 pixels
             # transforms.CenterCrop(25),         # crop longest side to 50 pixels at center
             transforms.ToTensor(),
-            # transforms.Normalize([0.485, 0.456, 0.406],
-            #                     [0.229, 0.224, 0.225])
+            transforms.Normalize([0.485, 0.456, 0.406],
+                                [0.229, 0.224, 0.225])
     ])
 
     trainset = ImageFolder(train_path, transform = train_transform)
@@ -114,7 +110,7 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
 
     #======================================================================================================
     # model = cnn().float().to(device)
-    model = MobileNetv2(output_size=100).to(device)
+    model = MODEL().to(device)
 
     # we use crossEntrophy loss here, because we are doing multi class classfication
     train_cg = TrainConfig(EPOCH=EPOCH, LR=LR, loss_function=nn.CrossEntropyLoss,
@@ -127,7 +123,7 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
     print('start train, device is ', device)
     train_record = []
     test_record = []
-
+    acc_record = []
     # later deal with this part
     # print('dataset pool:', train_data.pooling, 'batch', train_loader.batch_size)
     # print('reg_lambda ', reg_lambda)
@@ -153,7 +149,9 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
                 train_record += [loss.item()]
                 y_pred = output.argmax(axis=1).cpu()
                 y_label = labels.argmax(axis=1).cpu()
-                print('accracy is: ', np.mean(y_pred.numpy() == y_label.numpy()))
+                acc = np.mean(y_pred.numpy() == y_label.numpy())
+                acc_record += [acc]
+                print('accracy is: ', acc)
 
             optimizer.zero_grad()
             loss.backward()
@@ -162,23 +160,63 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
 
         if epoch % (EPOCH // 20) == 0:
 
-            
-            hypara_record
-
             test_loss = test(model, device, test_loader)
             test_record += [test_loss]
             model.train()
             torch.cuda.empty_cache()
 
 
-    torch.save(model, './model/cnnrnn.pkl')
-    np.save('./log/train_record.npy', np.array(train_record)[1:])
-    np.save('./log/test_record.npy', np.array(test_record)[1:])
-
+    # torch.save(model, './model/cnnrnn.pkl')
+    # np.save('./log/train_record.npy', np.array(train_record)[1:])
+    # np.save('./log/test_record.npy', np.array(test_record)[1:])
+    return acc_record, train_record, test_record
 
 #####Implementation ###############
 if __name__ == '__main__':
+    MODEL_performance = []
+    MODEL_list = [cnn, MobileNetv2, SpinalNet_ResNet, SpinalNet_VGG]
+    Modelname = ['cnn', 'MobileNetv2', 'SpinalNet_ResNet', 'SpinalNet_VGG']
+    optimizer_name = ['Adam','SGD']
+    LR = [0.0001, 0.001, 0.01, 0.1]
+    optimizer = [torch.optim.Adam, torch.optim.SGD]
+
+    for ind in range(len(MODEL_list)):
+        if not os.path.exists('./log/LR/'):
+            os.mkdir('./log/LR/')
+            os.mkdir('./log/OPT/')
+        if not os.path.exists(os.path.join('./log/LR/', Modelname[ind])):
+            os.mkdir(os.path.join('./log/LR/', Modelname[ind]))
+        
+        
+        for  i in LR:
+            MODEL_performance +=  [ main(MODEL=MODEL_list[ind], LR= i, EPOCH=100, OPTIMIZER=torch.optim.Adam) ]
+            MODEL_performance = [np.logspace(13,1415,10),np.zeros(5),np.zeros(14)]
+            print( os.path.join('./log/LR/', Modelname[ind], 'acc_record_' + str(i) + '.npy') )
+            np.save(os.path.join('./log/LR/' ,Modelname[ind], 'acc_record_'+ str(i) +'.npy'), np.array(MODEL_performance[0])[1:])
+            np.save(os.path.join('./log/LR/' ,Modelname[ind], 'train_record_'+ str(i) +'.npy'), np.array(MODEL_performance[1])[1:])
+            np.save(os.path.join('./log/LR/' ,Modelname[ind], 'test_record_'+ str(i) +'.npy'), np.array(MODEL_performance[2])[1:])
+            MODEL_performance =[]
+
+        if not os.path.exists(os.path.join('./log/OPT/', Modelname[ind])):
+            os.mkdir(os.path.join('./log/OPT/', Modelname[ind]))
+        
+
     
+        for  j in range(len(optimizer_name)):
+            MODEL_performance +=  [ main(MODEL=MODEL_list[ind], LR= 0.001, EPOCH=100, OPTIMIZER=optimizer[j](MODEL_list[ind].parameters())) ]
+            np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'acc_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[0])[1:])
+            np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'train_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[1])[1:])
+            np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'test_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[2])[1:])
+            MODEL_performance =[]
+
+        
+
+         
+    
+
+
+
+
 
     
 
