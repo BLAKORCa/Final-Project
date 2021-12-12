@@ -188,7 +188,7 @@ if __name__ == '__main__':
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'acc_record_'+ str(i) +'.npy'), np.array(MODEL_performance[0])[1:])
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'train_record_'+ str(i) +'.npy'), np.array(MODEL_performance[1])[1:])
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'test_record_'+ str(i) +'.npy'), np.array(MODEL_performance[2])[1:])
-            torch.save(model, 'model.pkl')
+            torch.save(model, os.path.join('./log/LR/', Modelname[ind], 'model_' + str(i) + '.pkl'))
 
         if not os.path.exists('./log/OPT/'):
             os.mkdir('./log/OPT/')
@@ -201,7 +201,7 @@ if __name__ == '__main__':
             np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'acc_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[0])[1:])
             np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'train_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[1])[1:])
             np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'test_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[2])[1:])
-            torch.save(model, 'model.pkl')
+            torch.save(model, os.path.join('./log/OPT/', Modelname[ind], 'model_' + str(j) + '.pkl'))
 
         
 
