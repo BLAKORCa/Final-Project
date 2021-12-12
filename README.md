@@ -1,5 +1,5 @@
 # Final-Project CS675 Machine Learning 
-Group members: Chenyu Zhang, MengmengLiu, Anzhexiao, Zepeng Hu
+Group members: Chenyu Zhang, Mengmeng Liu, Anzhe Xiao, Zepeng Hu
 
 We are interested in bird image classification problems. The input of our algorithm is a bird image. Then we will consider using image classification neural networks like ResNet or RNN to classify which species the bird is.
 # Dataset
