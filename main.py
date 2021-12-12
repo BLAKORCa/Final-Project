@@ -163,7 +163,7 @@ def main( LR: float, EPOCH: int, OPTIMIZER, MODEL):
     # torch.save(model, './model/cnnrnn.pkl')
     # np.save('./log/train_record.npy', np.array(train_record)[1:])
     # np.save('./log/test_record.npy', np.array(test_record)[1:])
-    return acc_record, train_record, test_record
+    return (acc_record, train_record, test_record), model
 
 #####Implementation ###############
 if __name__ == '__main__':
@@ -184,11 +184,11 @@ if __name__ == '__main__':
             os.mkdir(os.path.join('./log/LR/', Modelname[ind]))
         
         for  i in LR:
-            MODEL_performance = main(MODEL=mod, LR= i, EPOCH=100, OPTIMIZER=torch.optim.Adam)
+            MODEL_performance, model = main(MODEL=mod, LR= i, EPOCH=100, OPTIMIZER=torch.optim.Adam)
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'acc_record_'+ str(i) +'.npy'), np.array(MODEL_performance[0])[1:])
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'train_record_'+ str(i) +'.npy'), np.array(MODEL_performance[1])[1:])
             np.save(os.path.join('./log/LR/' ,Modelname[ind], 'test_record_'+ str(i) +'.npy'), np.array(MODEL_performance[2])[1:])
-            MODEL_performance = ()
+            torch.save(model, 'model.pkl')
 
         if not os.path.exists('./log/OPT/'):
             os.mkdir('./log/OPT/')
@@ -197,11 +197,11 @@ if __name__ == '__main__':
             os.mkdir(os.path.join('./log/OPT/', Modelname[ind]))
         
         for  j in range(len(optimizer_name)):
-            MODEL_performance = main(MODEL=mod, LR= 0.001, EPOCH=100, OPTIMIZER=optimizer[j])
+            MODEL_performance, model = main(MODEL=mod, LR= 0.001, EPOCH=100, OPTIMIZER=optimizer[j])
             np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'acc_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[0])[1:])
             np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'train_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[1])[1:])
             np.save(os.path.join('./log/OPT/' ,Modelname[ind], 'test_record_'+optimizer_name[j]+'.npy'), np.array(MODEL_performance[2])[1:])
-            MODEL_performance =()
+            torch.save(model, 'model.pkl')
 
         
 
