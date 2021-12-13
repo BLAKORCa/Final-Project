@@ -49,10 +49,10 @@ class MobileNetv2(nn.Module):
   def forward(self, x):
     return self.mnet(x)
 
-class SpinalNet_ResNet(nn.Module):
+class ResNet(nn.Module):
     
     def __init__(self):
-        super(SpinalNet_ResNet, self).__init__()
+        super(ResNet, self).__init__()
         self.model = models.resnet18(pretrained=True)
         self.linear = nn.Linear(self.model.fc.in_features, 100)
 
