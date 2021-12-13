@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torchvision import models 
-from torchvision.models import mobilenet_v2, vgg16
+from torchvision.models import mobilenet_v2, vgg16, resnet18
 
 class cnn(nn.Module):
     def __init__(self):
@@ -49,10 +49,10 @@ class MobileNetv2(nn.Module):
   def forward(self, x):
     return self.mnet(x)
 
-class SpinalNet_ResNet(nn.Module):
+class ResNet18(nn.Module):
     
     def __init__(self):
-        super(SpinalNet_ResNet, self).__init__()
+        super(ResNet18, self).__init__()
         self.model = models.resnet18(pretrained=True)
         self.linear = nn.Linear(self.model.fc.in_features, 100)
 
